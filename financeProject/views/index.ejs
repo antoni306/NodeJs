@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="styles/style.css">
+</head>
+<body>
+    <div id="nbp-container" >
+        <form action="/get-nbp" id="nbp-form" method="post">
+            
+                <p>Select Table type:</p>
+                <label>
+                    <input type="radio" name="table" value="A" checked>
+                    A
+                </label>
+                <label>
+                    <input type="radio" name="table" value="B">
+                    B
+                </label>
+                <label>
+                    <input type="radio" name="table" value="C">
+                    C
+                </label>
+            
+
+            <label for="currency">Wybierz walutę:
+                <select id="currency" name="currency">
+                    
+                    <option value="none"></option>
+                    <% if(locals.nbpCodes){ %>
+                        <% for(let i=0;i<nbpCodes.length;i++){ %>
+                        <option value=<%=nbpCodes[i].code %>><%= nbpCodes[i].currency%></option>
+                    <% } }%>
+                </select>
+            </label>  
+            <label for="topCount">TopCount<input type="number" id="topCount" min="0" max="255" value="0" name="topCount"> </label>        
+            <label for="date-pick" id="label-date-pick" >
+                <select id="date-pick" class="hidden">
+                    Select
+                    <option value="1">Date</option>
+                    <option value="2">Start date, end Date</option>
+                    <input type="date" class="date-picker" id="first-date-picker" name="date1">
+                    <input type="date" class="date-picker hidden" id="second-date-picker" name="date2">
+                </select>
+            </label>
+            <button type="submit">Submit</button>
+        </form>
+        <!-- <div id="fetched-codes">
+            <ul>
+                <% if(locals.nbpValues){ %>
+                        <% for(let i=0;i<nbpCodes.length;i++){ %>
+                            <li>
+                                <div class="code-container">
+                                    <div class="code-name-container">
+                                        <%=nbpCodes[i].code %>
+                                    </div>
+                                    <div class="mid-price-container">
+                                        <%=nbpCodes[i].mid %>
+                                    </div>
+                                </div>
+                            </li>
+                        <% } %>
+                <% } %>
+            </ul>
+        </div> -->
+    </div>
+
+    <form autocomplete="off" action="/get-coingecko" method="post">
+        <div class="autocomplete" style="width:300px;">
+            <h2>Select coin</h2>
+            <input id="myInput" type="text" name="coin" placeholder="cryptocurrency">
+        </div>
+        <input type="submit">
+    </form>
+
+
+    
+    <script>
+        document.getElementById("date-pick").addEventListener("change",(event)=>{
+            var inputs = document.querySelectorAll('.date-picker');
+            if(event.target.value ==1){
+                document.getElementById("second-date-picker").setAttribute("class","hidden");
+            }else{
+                document.getElementById("second-date-picker").removeAttribute("class","hidden");
+                document.getElementById("second-date-picker").setAttribute("class","visible");
+            }
+            
+        });
+
+        document.getElementById("currency").addEventListener("change",(event)=>{
+            var select = document.getElementById('date-pick');
+            var endDate = document.getElementById("date2");
+
+            if(event.target.value != 'none'){
+                select.removeAttribute('class','hidden');
+                select.setAttribute('class','visible');
+            }else{
+                select.removeAttribute('class','visible');
+                select.setAttribute('class','hidden');
+                select.value ='1';
+                select.dispatchEvent(new Event("change",{bubbles:true}));
+            }
+        });
+
+        // document.getElementById('coin-input').addEventListener('type',(event)=>{
+            
+        // });
+
+        //autocomplete
+        function autocomplete(inp, arr) {
+        /*the autocomplete function takes two arguments,
+        the text field element and an array of possible autocompleted values:*/
+        var currentFocus;
+        /*execute a function when someone writes in the text field:*/
+        inp.addEventListener("input", function(e) {
+            var a, b, i, val = this.value;
+            /*close any already open lists of autocompleted values*/
+            closeAllLists();
+            if (!val) { return false;}
+            currentFocus = -1;
+            /*create a DIV element that will contain the items (values):*/
+            a = document.createElement("DIV");
+            a.setAttribute("id", this.id + "autocomplete-list");
+            a.setAttribute("class", "autocomplete-items");
+            /*append the DIV element as a child of the autocomplete container:*/
+            this.parentNode.appendChild(a);
+            /*for each item in the array...*/
+            for (i = 0; i < arr.length; i++) {
+                /*check if the item starts with the same letters as the text field value:*/
+                if (arr[i].substr(0, val.length).toUpperCase() == val.toUpperCase()) {
+                /*create a DIV element for each matching element:*/
+                b = document.createElement("DIV");
+                /*make the matching letters bold:*/
+                b.innerHTML = "<strong>" + arr[i].substr(0, val.length) + "</strong>";
+                b.innerHTML += arr[i].substr(val.length);
+                /*insert a input field that will hold the current array item's value:*/
+                b.innerHTML += "<input type='hidden' value='" + arr[i] + "'>";
+                /*execute a function when someone clicks on the item value (DIV element):*/
+                    b.addEventListener("click", function(e) {
+                    /*insert the value for the autocomplete text field:*/
+                    inp.value = this.getElementsByTagName("input")[0].value;
+                    /*close the list of autocompleted values,
+                    (or any other open lists of autocompleted values:*/
+                    closeAllLists();
+                });
+                a.appendChild(b);
+                }
+            }
+        });
+        /*execute a function presses a key on the keyboard:*/
+        inp.addEventListener("keydown", function(e) {
+            var x = document.getElementById(this.id + "autocomplete-list");
+            if (x) x = x.getElementsByTagName("div");
+            if (e.keyCode == 40) {
+                /*If the arrow DOWN key is pressed,
+                increase the currentFocus variable:*/
+                currentFocus++;
+                /*and and make the current item more visible:*/
+                addActive(x);
+            } else if (e.keyCode == 38) { //up
+                /*If the arrow UP key is pressed,
+                decrease the currentFocus variable:*/
+                currentFocus--;
+                /*and and make the current item more visible:*/
+                addActive(x);
+            } else if (e.keyCode == 13) {
+                /*If the ENTER key is pressed, prevent the form from being submitted,*/
+                e.preventDefault();
+                if (currentFocus > -1) {
+                /*and simulate a click on the "active" item:*/
+                if (x) x[currentFocus].click();
+                }
+            }
+        });
+        function addActive(x) {
+            /*a function to classify an item as "active":*/
+            if (!x) return false;
+            /*start by removing the "active" class on all items:*/
+            removeActive(x);
+            if (currentFocus >= x.length) currentFocus = 0;
+            if (currentFocus < 0) currentFocus = (x.length - 1);
+            /*add class "autocomplete-active":*/
+            x[currentFocus].classList.add("autocomplete-active");
+        }
+        function removeActive(x) {
+            /*a function to remove the "active" class from all autocomplete items:*/
+            for (var i = 0; i < x.length; i++) {
+            x[i].classList.remove("autocomplete-active");
+            }
+        }
+        function closeAllLists(elmnt) {
+            /*close all autocomplete lists in the document,
+            except the one passed as an argument:*/
+            var x = document.getElementsByClassName("autocomplete-items");
+            for (var i = 0; i < x.length; i++) {
+            if (elmnt != x[i] && elmnt != inp) {
+            x[i].parentNode.removeChild(x[i]);
+            }
+        }
+        }
+        /*execute a function when someone clicks in the document:*/
+        document.addEventListener("click", function (e) {
+            closeAllLists(e.target);
+        });
+        
+
+        }
+        async function getData() {
+            const res = await fetch('https://api.coingecko.com/api/v3/coins/list', {
+                headers: { 'Accept': 'application/json' }
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();   // <- tu dostajesz tablicę
+            return data;                     // <- WAŻNE: zwróć ją!
+        }
+
+        async function initiateCoins(){
+            var coinsSymbols = [];
+            coins = await getData();
+            for(let i =0;i<coins.length;i++){
+                coinsSymbols.push(coins[i].id);
+            }
+
+            // console.log(coinsSymbols);
+            autocomplete(document.getElementById("myInput"), coinsSymbols);
+        }
+        initiateCoins();
+        
+    </script>
+</body>
+</html>
